@@ -1,0 +1,27 @@
+@startuml
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Fitness User" as User <<Primary>>
+actor "Open Food Facts" as OFF <<Supporting>>
+actor "Data Regulator" as Regulator <<Offstage>>
+
+rectangle "wger" {
+    usecase "Create Workout Routine" as UC1
+    usecase "Create Nutrition Plan" as UC2
+    usecase "Track Body Weight" as UC3
+}
+User --> UC1 
+User --> UC2
+User --> UC3
+
+OFF .. UC2 : ingredient data
+
+Regulator .. UC1 : privacy 
+Regulator .. UC2 : privacy
+Regulator .. UC3 : privacy
+@enduml
