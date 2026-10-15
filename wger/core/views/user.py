@@ -28,17 +28,12 @@ from django.contrib.auth import (
     logout as django_logout,
 )
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
     PermissionRequiredMixin,
 )
 from django.contrib.auth.models import User
-from django.contrib.auth.views import (
-    PasswordChangeView,
-    PasswordResetConfirmView,
-    PasswordResetView,
-)
+from django.contrib.auth.views import PasswordChangeView
 from django.http import (
     HttpResponseForbidden,
     HttpResponseNotFound,
@@ -87,12 +82,15 @@ from rest_framework.authtoken.models import Token
 # wger
 from wger.core.forms import (
     PasswordConfirmationForm,
-    PasswordResetFormCaptcha,
     UsernameConfirmationForm,
     UserPersonalInformationForm,
     UserPreferencesForm,
 )
-from wger.gym.helpers import is_same_gym
+from wger.gym.helpers import (
+    holds_gym_permission,
+    is_same_gym,
+    outranks,
+)
 from wger.gym.models import (
     AdminUserNote,
     Contract,
@@ -159,9 +157,7 @@ def delete(request, user_pk=None):
         if not request.user.has_perm('gym.manage_gyms') and (
             not request.user.has_perm('gym.manage_gym')
             or not is_same_gym(request.user, user)
-            or user.has_perm('gym.manage_gym')
-            or user.has_perm('gym.gym_trainer')
-            or user.has_perm('gym.manage_gyms')
+            or holds_gym_permission(user, 'manage_gym', 'gym_trainer', 'manage_gyms')
         ):
             return HttpResponseForbidden()
     else:
@@ -498,6 +494,10 @@ class UserEditView(
         ):
             return HttpResponseForbidden()
 
+        # A new email address hands over the account through the password reset
+        if not outranks(user, self.get_object()):
+            return HttpResponseForbidden()
+
         return super(UserEditView, self).dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -517,6 +517,10 @@ def api_key(request):
     """
     Allows the user to generate an API key for the REST API
     """
+
+    # A trainer logged in as a member must not get credentials that outlive the session
+    if request.session.get('trainer.identity'):
+        return HttpResponseForbidden()
 
     context = {}
     context.update(csrf(request))
@@ -742,43 +746,6 @@ class WgerPasswordChangeView(PasswordChangeView):
             ),
             ButtonHolder(Submit('submit', _('Save'), css_class='btn-success btn-block')),
         )
-        return form
-
-
-class WgerPasswordResetView(PasswordResetView):
-    template_name = 'form_content.html'
-    email_template_name = 'registration/password_reset_email.html'
-    success_url = reverse_lazy('core:user:password_reset_done')
-    from_email = settings.WGER_SETTINGS['EMAIL_FROM']
-
-    def get_form_class(self):
-        if settings.WGER_SETTINGS['USE_RECAPTCHA']:
-            return PasswordResetFormCaptcha
-
-        # From django
-        return PasswordResetForm
-
-    def get_form(self, form_class=None):
-        # Massage django's default form. Our form already has a helper.
-        if not settings.WGER_SETTINGS['USE_RECAPTCHA']:
-            form = super().get_form(form_class)
-            form.helper = FormHelper()
-            form.helper.form_class = 'wger-form'
-            form.helper.add_input(Submit('submit', _('Save'), css_class='btn-success btn-block'))
-            return form
-
-        return super().get_form(form_class)
-
-
-class WgerPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'form_content.html'
-    success_url = reverse_lazy('core:user:login')
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.helper = FormHelper()
-        form.helper.form_class = 'wger-form'
-        form.helper.add_input(Submit('submit', _('Save'), css_class='btn-success btn-block'))
         return form
 
 

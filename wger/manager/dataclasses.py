@@ -182,12 +182,8 @@ class SlotData:
 
     @property
     def exercises(self) -> List[int]:
-        out = set()
-
-        for set_config in self.sets:
-            out.add(set_config.exercise)
-
-        return list(out)
+        # dict.fromkeys removes duplicates and keeps the order of the sets
+        return list(dict.fromkeys(set_config.exercise for set_config in self.sets))
 
     @property
     def is_superset(self) -> bool:
@@ -270,9 +266,17 @@ def round_value(
 @dataclass(init=False)
 class ConfigRequirements:
     rules: List[str] = field(default_factory=list)
+    all_sets: bool = False
+    """
+    When set, every logged set of the gating iteration must meet all rules and
+    at least the prescribed number of sets must have been logged, instead of a
+    single qualifying set being enough. Used for strict double progression
+    ("all prescribed sets at the top of the range").
+    """
 
     def __init__(self, data: Dict[str, Any]):
         self.rules = data.get('rules', [])
+        self.all_sets = bool(data.get('all_sets', False))
 
     def __bool__(self):
         return bool(self.rules)
