@@ -28,6 +28,7 @@ from typing import List
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Prefetch
 from django.urls import reverse
@@ -159,6 +160,20 @@ class Routine(models.Model):
             self.is_public = False
 
         super().save(*args, **kwargs)
+
+    def clean(self):
+        """Validate the date range that defines this routine."""
+        super().clean()
+        if not (self.start and self.end):
+            return
+
+        if self.start > self.end:
+            raise ValidationError({'end': 'The end date cannot be before the start date.'})
+
+        if self.duration.days > self.MAX_DURATION_DAYS:
+            raise ValidationError(
+                {'end': f'A routine cannot span more than {self.MAX_DURATION_DAYS} days.'}
+            )
 
     @property
     def duration(self) -> datetime.timedelta:

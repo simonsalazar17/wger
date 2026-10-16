@@ -19,6 +19,7 @@ from unittest import mock
 
 # Django
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
@@ -619,6 +620,37 @@ class RoutineApiTestCase(ApiBaseResourceTestCase):
         'start': '2024-03-11',
         'end': '2024-06-20',
     }
+
+
+class RoutineModelDateValidationTestCase(WgerTestCase):
+    def test_rejects_end_before_start(self):
+        routine = Routine(
+            start=datetime.date(2024, 6, 1),
+            end=datetime.date(2024, 1, 1),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            routine.clean()
+
+        self.assertEqual(
+            context.exception.message_dict,
+            {'end': ['The end date cannot be before the start date.']},
+        )
+
+    def test_rejects_duration_above_limit(self):
+        start = datetime.date(2024, 1, 1)
+        routine = Routine(
+            start=start,
+            end=start + datetime.timedelta(days=Routine.MAX_DURATION_DAYS + 1),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            routine.clean()
+
+        self.assertEqual(
+            context.exception.message_dict,
+            {'end': [f'A routine cannot span more than {Routine.MAX_DURATION_DAYS} days.']},
+        )
 
 
 class RoutineDateValidationTestCase(WgerTestCase):
