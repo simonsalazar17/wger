@@ -42,9 +42,9 @@ from wger.exercises.api.endpoints import (
     MUSCLE_ENDPOINT,
     VIDEO_ENDPOINT,
 )
+from wger.exercises.deletion_strategies import deletion_strategy_for
 from wger.exercises.models import (
     Alias,
-    DeletionLog,
     Equipment,
     Exercise,
     ExerciseCategory,
@@ -55,10 +55,6 @@ from wger.exercises.models import (
     Translation,
 )
 from wger.exercises.models.video import validate_video
-from wger.manager.models import (
-    SlotEntry,
-    WorkoutLog,
-)
 from wger.utils.requests import (
     get_all_paginated,
     get_paginated,
@@ -304,65 +300,9 @@ def handle_deleted_entries(
     url = make_uri(DELETION_LOG_ENDPOINT, server_url=remote_url, query={'limit': 100})
 
     for data in get_paginated(url, headers=wger_headers()):
-        uuid = data['uuid']
-        replaced_by_uuid = data['replaced_by']
-        model_type = data['model_type']
-
-        if model_type == DeletionLog.MODEL_EXERCISE:
-            obj_replaced = None
-            nr_slot_entries = None
-            nr_logs = None
-            try:
-                obj_replaced = Exercise.objects.get(uuid=replaced_by_uuid)
-            except Exercise.DoesNotExist:
-                pass
-
-            try:
-                old_exercise = Exercise.objects.get(uuid=uuid)
-
-                # Count the references before they are repointed, so we can
-                # report how many were moved to the replacement
-                if obj_replaced:
-                    nr_slot_entries = SlotEntry.objects.filter(exercise=old_exercise).count()
-                    nr_logs = WorkoutLog.objects.filter(exercise=old_exercise).count()
-
-                # Let the model repoint the references in routines and logs to
-                # the replacement (and reset the affected routine caches) before
-                # deleting, so that user data is not lost on this instance
-                old_exercise.delete(replace_by=replaced_by_uuid if obj_replaced else None)
-
-                replaced_by_info = f' (replaced by {obj_replaced.uuid})' if obj_replaced else ''
-                print_fn(f'Deleted exercise {uuid}{replaced_by_info}')
-                if nr_slot_entries:
-                    print_fn(f'- replaced in {nr_slot_entries} routines')
-                if nr_logs:
-                    print_fn(f'- replaced in {nr_logs} workout logs')
-            except Exercise.DoesNotExist:
-                pass
-
-        elif model_type == DeletionLog.MODEL_TRANSLATION:
-            try:
-                obj = Translation.objects.get(uuid=uuid)
-                obj.delete()
-                print_fn(f'Deleted translation {uuid} ({data["comment"]})')
-            except Translation.DoesNotExist:
-                pass
-
-        elif model_type == DeletionLog.MODEL_IMAGE:
-            try:
-                obj = ExerciseImage.objects.get(uuid=uuid)
-                obj.delete()
-                print_fn(f'Deleted image {uuid}')
-            except ExerciseImage.DoesNotExist:
-                pass
-
-        elif model_type == DeletionLog.MODEL_VIDEO:
-            try:
-                obj = ExerciseVideo.objects.get(uuid=uuid)
-                obj.delete()
-                print_fn(f'Deleted video {uuid}')
-            except ExerciseVideo.DoesNotExist:
-                pass
+        strategy = deletion_strategy_for(data['model_type'])
+        if strategy is not None:
+            strategy.delete(data, print_fn)
 
 
 def download_exercise_images(

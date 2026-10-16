@@ -29,7 +29,9 @@ from wger.core.models import (
     License,
 )
 from wger.core.tests.base_testcase import WgerTestCase
+from wger.exercises.deletion_strategies import DELETION_STRATEGIES
 from wger.exercises.models import (
+    DeletionLog,
     Equipment,
     Exercise,
     ExerciseCategory,
@@ -709,6 +711,28 @@ class MockVideoResponse:
 
 
 class TestSyncMethods(WgerTestCase):
+    def test_all_deletion_log_types_have_a_strategy(self):
+        model_types = {model_type for model_type, _ in DeletionLog.MODELS}
+
+        self.assertEqual(set(DELETION_STRATEGIES), model_types)
+
+    def test_media_deletion_strategies(self):
+        for model_type, model in (
+            (DeletionLog.MODEL_IMAGE, ExerciseImage),
+            (DeletionLog.MODEL_VIDEO, ExerciseVideo),
+        ):
+            with self.subTest(model_type=model_type):
+                obj = model.objects.first()
+                messages = []
+
+                DELETION_STRATEGIES[model_type].delete(
+                    {'uuid': str(obj.uuid)},
+                    messages.append,
+                )
+
+                self.assertFalse(model.objects.filter(pk=obj.pk).exists())
+                self.assertEqual(messages, [f'Deleted {model_type} {obj.uuid}'])
+
     @patch('requests.get', return_value=MockLanguageResponse())
     def test_language_sync(self, mock_request):
         language1 = Language.objects.get(pk=1)
