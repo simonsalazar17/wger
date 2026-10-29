@@ -9,7 +9,16 @@
 Progression requirements can now reference the top of the prescribed range via the new rules `max_repetitions` and `max_weight`, and the new `all_sets` flag requires every prescribed set to qualify. Together they enable classic double progression schemes ("work from 8 to 12 reps at a fixed weight, add weight only once all sets reach 12"), e.g. `{"rules": ["max_repetitions"], "all_sets": true}`.
 
 ### Others
-* ...
+* `/api/v2/measurement/` accepts a `metric_type` instead of a `category` id when
+  writing, and can be filtered by `metric_type` and `external_id`. Integrations
+  such as scale apps no longer have to look up their category first or keep
+  track of the ids of the entries they wrote.
+* Exercise contributions always have an author: if none is given, the username
+  is used. Everyone who edits an exercise or translation is credited as an
+  author, images and videos keep the author of the file.
+* The routine date sequences (`date-sequence-gym`, `date-sequence-display`) have
+  a new `text_repr_short` per set: repetitions and weight only, without sets,
+  RiR and rest, e.g. for notifications.
 
 ### Bug fixes
 
@@ -19,6 +28,8 @@ Progression requirements can now reference the top of the prescribed range via t
   deletion continue to remove the corresponding history. Apply the usual database
   migrations when upgrading; previously deleted history cannot be restored by
   this change.
+* Sets with "Until Failure" or "Max Reps" but no repetitions value keep their
+  unit in the routine API and show it in the set text.
 
 ## New settings
 *(for self-hoster)*
