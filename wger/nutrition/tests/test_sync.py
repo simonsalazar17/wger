@@ -32,7 +32,11 @@ from wger.nutrition.models import (
     Ingredient,
     IngredientWeightUnit,
 )
-from wger.nutrition.sync import sync_ingredients
+from wger.nutrition.sync import (
+    _is_trusted_wger_image_url,
+    fetch_image_from_wger_instance,
+    sync_ingredients,
+)
 from wger.nutrition.tasks import (
     sync_all_ingredients_chunked_task,
     sync_ingredient_id_range_task,
@@ -124,6 +128,46 @@ class MockIngredientResponse:
 
 
 class TestSyncMethods(WgerTestCase):
+    def test_wger_image_url_must_match_configured_origin(self):
+        self.assertTrue(
+            _is_trusted_wger_image_url(
+                'https://wger.de/media/ingredients/image.jpg',
+                'https://wger.de',
+            )
+        )
+        self.assertFalse(
+            _is_trusted_wger_image_url(
+                'http://127.0.0.1/admin/',
+                'https://wger.de',
+            )
+        )
+        self.assertFalse(
+            _is_trusted_wger_image_url(
+                'https://attacker.example/image.jpg',
+                'https://wger.de',
+            )
+        )
+
+    @patch('wger.nutrition.sync.requests.get')
+    def test_wger_image_sync_skips_untrusted_image_url(self, mock_request):
+        ingredient = Ingredient.objects.get(pk=1)
+        response = MagicMock()
+        response.json.return_value = {
+            'count': 1,
+            'results': [
+                {
+                    'uuid': 'bb000000-0000-0000-0000-000000000001',
+                    'image': 'http://127.0.0.1/admin/',
+                }
+            ],
+        }
+        mock_request.return_value = response
+
+        fetch_image_from_wger_instance(ingredient)
+
+        # The metadata request is made, but the untrusted image URL is never fetched.
+        mock_request.assert_called_once()
+
     @patch('requests.get', return_value=MockIngredientResponse())
     def test_ingredient_sync(self, mock_request):
         # Arrange

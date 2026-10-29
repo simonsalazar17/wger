@@ -23,6 +23,7 @@ from typing import (
     List,
     Optional,
 )
+from urllib.parse import urlsplit
 
 # Django
 from django.conf import settings
@@ -81,6 +82,24 @@ from wger.utils.url import make_uri
 
 
 logger = logging.getLogger(__name__)
+
+
+def _is_trusted_wger_image_url(image_url: str, instance_url: str) -> bool:
+    """Only fetch images from the configured wger instance origin."""
+    try:
+        image = urlsplit(image_url)
+        instance = urlsplit(instance_url)
+        return (
+            image.scheme in {'http', 'https'}
+            and image.scheme == instance.scheme
+            and image.hostname is not None
+            and image.hostname.lower() == (instance.hostname or '').lower()
+            and image.port == instance.port
+            and image.username is None
+            and image.password is None
+        )
+    except ValueError:
+        return False
 
 
 def _resolve_language_codes(language_codes: Optional[str]) -> List[str] | None:
@@ -179,7 +198,12 @@ def fetch_ingredient_image(pk: int):
 
 
 def fetch_image_from_wger_instance(ingredient):
-    url = make_uri(IMAGE_ENDPOINT, query={'ingredient__uuid': ingredient.uuid})
+    instance_url = settings.WGER_SETTINGS['WGER_INSTANCE']
+    url = make_uri(
+        IMAGE_ENDPOINT,
+        query={'ingredient__uuid': ingredient.uuid},
+        server_url=instance_url,
+    )
     logger.info(f'Trying to fetch image from WGER for {ingredient.name} (UUID: {ingredient.uuid})')
     result = requests.get(url, headers=wger_headers()).json()
     if result['count'] == 0:
@@ -193,7 +217,16 @@ def fetch_image_from_wger_instance(ingredient):
         logger.info('image already present locally, skipping...')
         return
     except Image.DoesNotExist:
-        retrieved_image = requests.get(image_data['image'], headers=wger_headers())
+        image_url = image_data['image']
+        if not _is_trusted_wger_image_url(image_url, instance_url):
+            logger.warning('Skipping ingredient image from an untrusted URL')
+            return
+
+        retrieved_image = requests.get(
+            image_url,
+            headers=wger_headers(),
+            allow_redirects=False,
+        )
         try:
             image = Image.from_json(ingredient, retrieved_image, image_data)
         except ValidationError as e:

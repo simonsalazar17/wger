@@ -341,7 +341,11 @@ class FetchIngredientImageTestCase(WgerTestCase):
         """
 
         with self.settings(
-            WGER_SETTINGS={'DOWNLOAD_INGREDIENTS_FROM': DOWNLOAD_INGREDIENT_WGER}, TESTING=False
+            WGER_SETTINGS={
+                'DOWNLOAD_INGREDIENTS_FROM': DOWNLOAD_INGREDIENT_WGER,
+                'WGER_INSTANCE': 'http://localhost:8000',
+            },
+            TESTING=False,
         ):
             # Act
             result = fetch_ingredient_image(1)
@@ -353,12 +357,13 @@ class FetchIngredientImageTestCase(WgerTestCase):
                 '7908c204-907f-4b1e-ad4e-f482e9769ade)'
             )
             mock_request.assert_any_call(
-                'https://wger.de/api/v2/ingredient-image/?ingredient__uuid=7908c204-907f-4b1e-ad4e-f482e9769ade',
+                'http://localhost:8000/api/v2/ingredient-image/?ingredient__uuid=7908c204-907f-4b1e-ad4e-f482e9769ade',
                 headers=wger_headers(),
             )
             mock_request.assert_any_call(
                 'http://localhost:8000/media/ingredients/1/188324b5-587f-42d7-9abc-d2ca64c73d45.jpg',
                 headers=wger_headers(),
+                allow_redirects=False,
             )
             mock_from_json.assert_called()
             self.assertIsNone(result)
