@@ -28,4 +28,8 @@ class AllowRegisterUser(BasePermission):
         if request.user.is_anonymous:
             return False
 
-        return request.user.userprofile.can_add_user
+        userprofile = getattr(request.user, 'userprofile', None)
+        if userprofile is None:
+            return False
+
+        return userprofile.can_add_user
