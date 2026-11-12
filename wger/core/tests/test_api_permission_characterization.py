@@ -49,8 +49,7 @@ class AllowRegisterUserCharacterizationTestCase(SimpleTestCase):
 
         self.assertFalse(self.permission.has_permission(request, None))
 
-    def test_has_permission_when_authenticated_user_has_no_profile_raises_attribute_error(self):
+    def test_has_permission_when_authenticated_user_has_no_profile_denies_registration(self):
         request = SimpleNamespace(user=SimpleNamespace(is_anonymous=False))
 
-        with self.assertRaises(AttributeError):
-            self.permission.has_permission(request, None)
+        self.assertFalse(self.permission.has_permission(request, None))
