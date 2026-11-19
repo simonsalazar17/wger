@@ -16,6 +16,7 @@
 
 # Local
 from .abstract_config import AbstractChangeConfig
+from .cardio import CardioLog
 from .day import Day
 from .label import Label
 from .log import WorkoutLog

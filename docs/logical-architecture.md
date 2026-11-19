@@ -5,12 +5,12 @@ flowchart TB
     subgraph presentation["Presentation and Interface Layer"]
         direction LR
         rootRoutes["wger/urls.py"]
-        featureRoutes["wger/*/urls.py"]
-        webViews["wger/*/views/"]
+        featureRoutes["wger/*/urls.py<br/>wger/manager/urls.py (cardio)"]
+        webViews["wger/*/views/<br/>wger/manager/views/cardio.py<br/>wger/manager/forms.py"]
         reactHost["wger/core/views/react.py"]
-        templates["wger/*/templates/"]
-        apiViews["wger/*/api/views.py"]
-        apiSupport["wger/*/api/serializers.py<br/>wger/*/api/filtersets.py<br/>wger/*/api/permissions.py"]
+        templates["wger/*/templates/<br/>wger/manager/templates/manager/cardio/"]
+        apiViews["wger/*/api/views.py<br/>CardioLogViewSet"]
+        apiSupport["wger/*/api/serializers.py<br/>CardioLogSerializer<br/>wger/*/api/filtersets.py<br/>wger/*/api/permissions.py"]
     end
 
     subgraph application["Application and Orchestration Layer"]
@@ -23,7 +23,7 @@ flowchart TB
     subgraph domain["Domain and Persistence Layer (Django Active Record)"]
         direction LR
         coreModels["wger/core/models/"]
-        workoutModels["wger/manager/models/<br/>wger/exercises/models/"]
+        workoutModels["wger/manager/models/<br/>CardioLog + migration<br/>wger/exercises/models/"]
         nutritionModels["wger/nutrition/models/"]
         trackingModels["wger/measurements/models/"]
         otherModels["wger/config/models/<br/>wger/gallery/models/<br/>wger/gym/models/<br/>wger/mailer/models/<br/>wger/trophies/models/"]

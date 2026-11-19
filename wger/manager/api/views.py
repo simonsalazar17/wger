@@ -34,6 +34,7 @@ from wger.manager.api.filtersets import (
 )
 from wger.manager.api.permissions import RoutinePermission
 from wger.manager.api.serializers import (
+    CardioLogSerializer,
     DaySerializer,
     LogDisplaySerializer,
     LogStatsDataSerializer,
@@ -57,6 +58,7 @@ from wger.manager.api.serializers import (
     WorkoutSessionSerializer,
 )
 from wger.manager.models import (
+    CardioLog,
     Day,
     MaxRepetitionsConfig,
     MaxRestConfig,
@@ -326,6 +328,26 @@ class WorkoutLogViewSet(WgerOwnerObjectModelViewSet):
             (SlotEntry, 'slot_entry'),
             (WorkoutLog, 'next_log'),
         ]
+
+
+class CardioLogViewSet(WgerOwnerObjectModelViewSet):
+    """CRUD endpoint for the authenticated user's cardio activities."""
+
+    serializer_class = CardioLogSerializer
+    is_private = True
+    ordering_fields = '__all__'
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CardioLog.objects.none()
+        return CardioLog.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @staticmethod
+    def get_owner_objects():
+        return []
 
 
 class RoutineDayViewSet(WgerOwnerObjectModelViewSet):

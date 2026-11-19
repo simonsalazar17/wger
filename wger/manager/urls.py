@@ -22,6 +22,7 @@ from django.urls import path
 # wger
 from wger.core.views.react import ReactView
 from wger.manager.views import (
+    cardio,
     ical,
     pdf,
     routine,
@@ -126,6 +127,9 @@ patterns_routine = [
 ]
 
 urlpatterns = [
+    path('cardio/', cardio.overview, name='cardio-overview'),
+    path('cardio/<uuid:pk>/edit/', cardio.edit, name='cardio-edit'),
+    path('cardio/<uuid:pk>/delete/', cardio.delete, name='cardio-delete'),
     path('', include((patterns_routine, 'routine'), namespace='routine')),
     path('templates/', include((patterns_templates, 'template'), namespace='template')),
     path('<int:routine_pk>/day/', include((patterns_days, 'day'), namespace='day')),

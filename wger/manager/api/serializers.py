@@ -29,6 +29,7 @@ from wger.manager.api.consts import BASE_CONFIG_FIELDS
 from wger.manager.api.fields import DecimalOrIntegerField
 from wger.manager.api.validators import validate_requirements
 from wger.manager.models import (
+    CardioLog,
     Day,
     MaxRepetitionsConfig,
     MaxRestConfig,
@@ -597,6 +598,34 @@ class WorkoutLogSerializer(serializers.ModelSerializer):
             'rest',
             'rest_target',
         )
+
+
+class CardioLogSerializer(serializers.ModelSerializer):
+    """Serializer for a user's standalone cardio activities."""
+
+    class Meta:
+        model = CardioLog
+        fields = (
+            'id',
+            'activity',
+            'date',
+            'duration_minutes',
+            'distance',
+            'distance_unit',
+            'notes',
+        )
+
+    def validate(self, attrs):
+        log = self.instance or CardioLog()
+        for field, value in attrs.items():
+            setattr(log, field, value)
+        try:
+            log.clean()
+        except DjangoValidationError as error:
+            if hasattr(error, 'message_dict'):
+                raise serializers.ValidationError(error.message_dict) from error
+            raise serializers.ValidationError(error.messages) from error
+        return attrs
 
 
 class LogDisplaySerializer(serializers.Serializer):

@@ -39,6 +39,13 @@
                             {% if user.is_authenticated %}
                                 <li>
                                     <a class="dropdown-item"
+                                       href="{% url 'manager:cardio-overview' %}"
+                                       rel="nofollow">
+                                        {% translate "Cardio activities" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
                                        href="{% url 'manager:routine:calendar' %}"
                                        rel="nofollow">
                                         {% translate "Calendar" %}

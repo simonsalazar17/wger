@@ -7,7 +7,7 @@
 
 
 ### Others
-* 
+* Add standalone cardio activity logging with duration, distance, notes, and a private REST API.
 
 ### Bug fixes
 

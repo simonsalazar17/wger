@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% translate "Cardio activities" %}{% endblock %}
+
+{% block content %}
+<h1>{% translate "Cardio activities" %}</h1>
+
+<section aria-labelledby="cardio-history-heading">
+    <h2 id="cardio-history-heading">{% translate "Completed activities" %}</h2>
+    {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">{% translate "Activity" %}</th>
+                        <th scope="col">{% translate "Date" %}</th>
+                        <th scope="col">{% translate "Duration" %}</th>
+                        <th scope="col">{% translate "Distance" %}</th>
+                        <th scope="col">{% translate "Notes" %}</th>
+                        <th scope="col">{% translate "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <th scope="row">{{ log.activity }}</th>
+                            <td>{{ log.date }}</td>
+                            <td>{% if log.duration_minutes != None %}{{ log.duration_minutes }} min{% else %}—{% endif %}</td>
+                            <td>{% if log.distance != None %}{{ log.distance }} {{ log.get_distance_unit_display }}{% else %}—{% endif %}</td>
+                            <td>{{ log.notes|default:'—'|linebreaksbr }}</td>
+                            <td class="text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'manager:cardio-edit' pk=log.pk %}">{% translate "Edit" %}</a>
+                                <a class="btn btn-sm btn-outline-danger" href="{% url 'manager:cardio-delete' pk=log.pk %}">{% translate "Delete" %}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>{% translate "No cardio activities logged yet." %}</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block sidebar %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="h5 mb-0">{% translate "Log an activity" %}</h3>
+    </div>
+    <div class="card-body">
+        <form id="cardio-log-form" method="post" class="wger-form">
+            {% csrf_token %}
+            {% crispy form %}
+            <button type="submit" class="btn btn-primary">{% translate "Save activity" %}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Delete cardio activity" %}{% endblock %}
+
+{% block content %}
+<h1>{% translate "Delete" %} {{ log.activity }}?</h1>
+<div class="alert alert-warning" role="alert">
+    {% translate "This will remove this cardio activity from your log." %}
+</div>
+<form method="post" class="d-flex gap-2">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">{% translate "Delete activity" %}</button>
+    <a class="btn btn-secondary" href="{% url 'manager:cardio-overview' %}">{% translate "Cancel" %}</a>
+</form>
+{% endblock %}
