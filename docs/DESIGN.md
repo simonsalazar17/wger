@@ -4,7 +4,7 @@
 
 This feature addresses [wger issue #2510](https://github.com/wger-project/wger/issues/2510): cardio activities do not fit the current strength-set logging flow, which centers on repetitions and weight. A user should be able to record an activity such as a run, walk, hike, or rowing workout without first adding it to a strength routine.
 
-The first version will let an authenticated user create, update, view, and delete a cardio entry with an activity name, date and time, optional duration in seconds, optional distance in meters/kilometers/miles, and optional notes. At least one of duration or distance is required; either may be zero, but negative values are rejected. Entries belong to their creator, and one user must not be able to read or modify another user's entry. The form and completed-entry view will be available in the web application, and the REST API will expose the same fields.
+The first version will let an authenticated user create, update, view, and delete a cardio entry with an activity name, date and time, optional duration in minutes, optional distance in meters/kilometers/miles, and optional notes. At least one of duration or distance is required; either may be zero, but negative values are rejected. Entries belong to their creator, and one user must not be able to read or modify another user's entry. The form and completed-entry view will be available in the web application, and the REST API will expose the same fields.
 
 This version deliberately excludes interval/set breakdowns, heart-rate fields, calories-burned calculation, user-defined metrics, wearable/health-platform imports, and automatic nutrition-plan updates. Those require separate product and data-design decisions.
 
