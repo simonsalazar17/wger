@@ -32,7 +32,7 @@ The feature belongs in the existing `wger/manager/` workout domain: a model and 
 
 The change crosses the existing user-to-web/API boundary and adds stored personal activity data. The form and API must require authentication, derive ownership from the authenticated request, and scope reads and updates to that owner. Distance and duration must be validated on both write paths; clients must not be able to submit a different owner. Existing API behavior remains unchanged because the new endpoint is additive.
 
-The database migration adds a new table, so existing workout-log data does not need backfilling or reinterpretation. Existing callers and clients remain compatible. Tests will cover model/form validation (including missing metrics, zero, and negative values), API create/update and cross-owner access, and an end-to-end web submission and display.
+The database migration adds a new table, so existing workout-log data does not need backfilling or reinterpretation. Existing callers and clients remain compatible. PowerSync/mobile synchronization is deliberately out of scope; the first version supports the web flow and REST API only. Tests will cover model/form validation (including missing metrics, zero, and negative values), API create/update and cross-owner access, and an end-to-end web submission and display.
 
 ## Design principles
 
