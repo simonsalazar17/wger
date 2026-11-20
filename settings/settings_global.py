@@ -280,7 +280,7 @@ ACCOUNT_CHANGE_EMAIL = True
 ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 
 # Use wger's own login/signup/password reset forms (allauth's forms + the
-# password-visibility toggle, and a conditional reCAPTCHA field on signup and
+# password-visibility toggle, and a conditional captcha field on signup and
 # password reset).
 ACCOUNT_FORMS = {
     'login': 'wger.core.forms.WgerLoginForm',
@@ -647,6 +647,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 USER_AGENTS_CACHE = 'default'
 
+# Read timeout in seconds for requests to remote servers
+WGER_REQUEST_TIMEOUT = 60
+
 #
 # Application specific configuration options
 #
@@ -675,6 +678,10 @@ WGER_SETTINGS = {
     'TWITTER': False,
     'MASTODON': 'https://fosstodon.org/@wger',
     'USE_CELERY': False,
+    # CAPTCHA_PROVIDER: 'recaptcha', 'turnstile', or 'none'
+    'CAPTCHA_PROVIDER': 'none',
+    # Deprecated: USE_RECAPTCHA is kept for backwards compatibility
+    # If set to True and CAPTCHA_PROVIDER is 'none', it will use 'recaptcha'
     'USE_RECAPTCHA': False,
     'WGER_INSTANCE': 'https://wger.de',
 
@@ -732,6 +739,12 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 RECAPTCHA_PUBLIC_KEY = ''
 RECAPTCHA_PRIVATE_KEY = ''
 RECAPTCHA_REQUIRED_SCORE = 0
+
+#
+# Cloudflare Turnstile
+#
+TURNSTILE_SITE_KEY = ''
+TURNSTILE_SECRET_KEY = ''
 
 #
 # Storage options

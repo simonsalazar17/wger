@@ -103,6 +103,7 @@ JWT_PRIVATE_KEY = env.str('JWT_PRIVATE_KEY', '')
 POWERSYNC_URL_PATH = env.str('POWERSYNC_URL_PATH', 'ps')
 POWERSYNC_URL = env.str('POWERSYNC_URL', '')
 POWERSYNC_TOKEN_LIFETIME = env.int('POWERSYNC_TOKEN_LIFETIME', 600)
+WGER_REQUEST_TIMEOUT = env.int('WGER_REQUEST_TIMEOUT', 60)
 if not DEBUG and any(
     key and hashlib.sha256(key.encode()).hexdigest() in _DEFAULT_JWT_KEY_HASHES
     for key in (JWT_PUBLIC_KEY, JWT_PRIVATE_KEY)
@@ -131,6 +132,10 @@ IDP_OIDC_PRIVATE_KEY = env.str('IDP_OIDC_PRIVATE_KEY', '', multiline=True)
 RECAPTCHA_PUBLIC_KEY = env.str('RECAPTCHA_PUBLIC_KEY', '')
 RECAPTCHA_PRIVATE_KEY = env.str('RECAPTCHA_PRIVATE_KEY', '')
 RECAPTCHA_REQUIRED_SCORE = env.float('RECAPTCHA_REQUIRED_SCORE', 0.75)
+
+# Your Cloudflare Turnstile keys
+TURNSTILE_SITE_KEY = env.str('TURNSTILE_SITE_KEY', '')
+TURNSTILE_SECRET_KEY = env.str('TURNSTILE_SECRET_KEY', '')
 
 # The site's URL (e.g. http://www.my-local-gym.com or http://localhost:8000)
 # This is needed for uploaded files and images (exercise images, etc.) to be
@@ -192,6 +197,9 @@ WGER_SETTINGS['SYNC_INGREDIENTS_DUMP_URL'] = env.str(
 )
 WGER_SETTINGS['SYNC_OFF_DAILY_DELTA_CELERY'] = env.bool('SYNC_OFF_DAILY_DELTA_CELERY', False)
 WGER_SETTINGS['EXPORT_INGREDIENTS_BULK_CELERY'] = env.bool('EXPORT_INGREDIENTS_BULK_CELERY', False)
+# CAPTCHA_PROVIDER: 'recaptcha', 'turnstile', or 'none'
+WGER_SETTINGS['CAPTCHA_PROVIDER'] = env.str('CAPTCHA_PROVIDER', 'none')
+# Deprecated, USE_RECAPTCHA=True still means CAPTCHA_PROVIDER=recaptcha
 WGER_SETTINGS['USE_RECAPTCHA'] = env.bool('USE_RECAPTCHA', False)
 WGER_SETTINGS['USE_CELERY'] = env.bool('USE_CELERY', False)
 WGER_SETTINGS['CACHE_API_EXERCISES_CELERY'] = env.bool('CACHE_API_EXERCISES_CELERY', False)
@@ -395,6 +403,7 @@ if USE_S3_MEDIA_FILES or USE_S3_STATIC_FILES:
         f'{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_REGION_NAME}.{AWS_S3_DOMAIN}',
     )
     AWS_QUERYSTRING_AUTH = False
+    AWS_DEFAULT_ACL = env.str('AWS_DEFAULT_ACL', None)
 
     if USE_S3_MEDIA_FILES:
         STORAGES['default'] = {
