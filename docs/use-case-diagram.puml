@@ -14,14 +14,17 @@ rectangle "wger" {
     usecase "Create Workout Routine" as UC1
     usecase "Create Nutrition Plan" as UC2
     usecase "Track Body Weight" as UC3
+    usecase "Log Cardio Activity" as UC4
 }
 User --> UC1 
 User --> UC2
 User --> UC3
+User --> UC4
 
 OFF .. UC2 : ingredient data
 
 Regulator .. UC1 : privacy 
 Regulator .. UC2 : privacy
 Regulator .. UC3 : privacy
+Regulator .. UC4 : privacy
 @enduml

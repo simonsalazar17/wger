@@ -72,12 +72,12 @@ flowchart LR
 | 5 | Task broker and background worker | Celery deserializes and dispatches task messages. No application-level publisher identity check is visible at the task consumer; the worker relies on the broker being restricted to trusted publishers. |
 | 6 | Background worker and configured upstream wger API | `requests` retrieves the API response. The ingredient sync extractor maps fields into `IngredientData` and runs sanity checks; malformed records are skipped by the sync loop. This validates imported values, but does not validate every URL contained in the response. |
 | 7 | Background worker and Open Food Facts | The Open Food Facts client handles API access. Imported ingredient values pass through the ingredient extraction and sanity-check path; downloaded image content is checked by the image validator after retrieval. |
-| 8 | Background worker and the image URL supplied by upstream data | **Finding:** `fetch_image_from_wger_instance()` passes `image_data['image']` directly to `requests.get()`. The code does not first restrict the scheme or host. `BaseImageMixin` validates the downloaded bytes as an image only after the request has already been made. |
+| 8 | Background worker and the image URL supplied by upstream data | `fetch_image_from_wger_instance()` now checks that the image URL has the configured wger instance's scheme, hostname, and port, and contains no user credentials. It skips a mismatched URL and disables redirects for the image request. This mitigates the previously identified untrusted-destination path; it does not validate every outbound request in the application. |
 | 9 | Background worker and database | Django ORM operations are subject to database schema constraints. Imported ingredient values are also normalized and sanity-checked in the integration layer before persistence. |
 
 ## Trust Finding
 
-The image sync worker trusts the destination URL supplied in an upstream API response. If that upstream response is compromised or contains a malicious URL, the worker could make a server-side request to an internal address or service. The later image-format check can reject the returned bytes, but it cannot undo the request; the worker should validate the URL scheme and allowed host before fetching it.
+The image sync worker previously trusted the destination URL supplied in an upstream API response. Commit `159805017` mitigates this finding by validating the URL against the configured instance origin before requesting it and by disabling redirects. The worker still relies on the configured origin being trustworthy and correctly configured; this check is limited to the ingredient-image fetch path and is not a general outbound-request policy.
 
 ## Code Evidence
 
@@ -86,9 +86,5 @@ The image sync worker trusts the destination URL supplied in an upstream API res
 - Routine authentication and object permissions: `wger/manager/api/permissions.py`
 - Celery broker settings: `settings/main.py`
 - Worker tasks: `wger/nutrition/tasks.py`
-- Upstream image URL fetch: `wger/nutrition/sync.py`, `fetch_image_from_wger_instance()`
+- Upstream image URL validation and fetch: `wger/nutrition/sync.py`, `_is_trusted_wger_image_url()` and `fetch_image_from_wger_instance()`
 - Image-byte validation after download: `wger/utils/helpers.py`, `BaseImageMixin.save_image()`
-
-## Embed in the Wiki
-
-Copy the Mermaid code block above into the wiki page. The table below it documents what is checked at each numbered crossing and the trust gap identified in the worker's image-fetch path.

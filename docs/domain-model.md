@@ -36,6 +36,8 @@
 | plan reference / plan field | Create Nutrition Plan, Extension 5a | Neither | API and form implementation details referring to a `NutritionPlan`. |
 | validation error | Create Nutrition Plan, Extensions 5a and 7a | Neither | A system response, not a persistent domain concept. |
 | body-weight measurement / weight entry | Track Body Weight, Success Guarantee and steps 3-7 | Conceptual class: `BodyWeightMeasurement` | A dated fact with its own value and identity. |
+| cardio activity / cardio log | Log Cardio Activity, create and update flow | Conceptual class: `CardioLog` | A completed activity record with an identity, owner, date, and cardio metrics. |
+| activity name, date, duration, distance, distance unit, notes | Log Cardio Activity | Attributes of `CardioLog` | Text, time, and measurements describing a single recorded activity. |
 | measurement date | Track Body Weight, steps 3-4 | Attribute of `BodyWeightMeasurement` | A date and time describing when the measurement was taken. |
 | weight value | Track Body Weight, steps 3-6 | Attribute of `BodyWeightMeasurement` | A numeric value recorded by the user. |
 | recorded unit | Track Body Weight, steps 5-6 | Attribute of `BodyWeightMeasurement` | The unit in which that particular value was entered. |
@@ -156,6 +158,15 @@ classDiagram
         recordedUnit
     }
 
+    class CardioLog {
+        activity
+        date
+        duration_minutes
+        distance
+        distance_unit
+        notes
+    }
+
     Person "1" -- "0..*" WorkoutRoutine : owns
     Person "1" -- "0..*" WorkoutSession : performs
     Person "1" -- "0..*" NutritionPlan : owns
@@ -175,7 +186,10 @@ classDiagram
     Ingredient "1" -- "0..*" MealItem : selected ingredient
 
     MeasurementCategory "1" *-- "0..*" BodyWeightMeasurement : groups
+    Person "1" -- "0..*" CardioLog : records
 ```
+
+The final-project feature adds `CardioLog`, associated with its owner (`Person` in this conceptual model; the implementation uses Django's authenticated `User`). A log must contain a duration, a distance, or both; a distance has a unit. The model and database constraints reject negative measurements. The feature is independent of a scheduled `WorkoutRoutine` in this first version.
 
 ## What Changed
 
